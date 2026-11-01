@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "PS3 Atlas Viewer 디버깅",
+      "type": "clr",
+      "request": "launch",
+      "preLaunchTask": "build-debug",
+      "program": "${workspaceFolder}/bin/Debug/net45/PS3AtlasViewer.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}/bin/Debug/net45",
+      "console": "internalConsole",
+      "stopAtEntry": false,
+      "justMyCode": true
+    }
+  ]
+}

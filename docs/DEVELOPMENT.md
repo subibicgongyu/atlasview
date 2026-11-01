@@ -1,6 +1,19 @@
 # 개발 구조와 형식 근거
 
+## VS Code 소스 분석 환경
+
+저장소 루트 폴더 `atlasview`를 열어 `PS3AtlasViewer.csproj`에 포함된 `src/*.cs`를 함께 분석합니다. `src` 폴더만 열면 루트 프로젝트와 설정을 찾지 못합니다. 최신 C# 확장의 언어 서버에는 별도 .NET SDK가 필요합니다. 확장이 자동으로 설치하는 런타임이나 Windows 내장 Framework 컴파일러만으로는 SDK 요구 사항을 충족하지 못합니다. Windows x64용 .NET 10 SDK 설치 후 `dotnet --list-sdks`로 확인하고 VS Code를 다시 시작합니다.
+
+프로젝트는 기존 실행 대상인 .NET Framework 4.5와 C# 5를 유지합니다. Framework 프로젝트는 `.vscode/settings.json`의 `dotnet.preferCSharpExtension`으로 기본 C# 확장이 처리하게 합니다. SDK 프로젝트의 첫 복원 시 .NET Framework 참조 어셈블리 패키지를 NuGet에서 내려받으므로 네트워크가 필요합니다. `dotnet build PS3AtlasViewer.csproj` 결과는 `bin/`에 생성하며, 사용자 설정이 있는 `dist/`와 분리합니다. 배포용 GUI/CLI 생성과 기존 자동 검사는 계속 `build.ps1 -Test`를 사용합니다. SDK는 개발 환경에만 필요하며 배포 앱 사용자의 요구 사항은 바뀌지 않습니다.
+
+### F5 디버깅
+
+`.vscode/tasks.json`의 `build-debug` 작업은 SDK 프로젝트를 Debug 구성으로 빌드합니다. `Ctrl+Shift+B`로 빌드만 실행할 수 있습니다. `.vscode/launch.json`의 `PS3 Atlas Viewer 디버깅`을 선택하고 F5를 누르면 빌드 후 `bin/Debug/net45/PS3AtlasViewer.exe`를 실행합니다. .NET Framework용 `clr` 디버거를 사용하며 Debug 구성은 최적화를 끄고 Portable PDB를 생성합니다。VS Code의 Framework 디버거는 x64 프로그램과 Portable PDB를 요구하므로 `DebugType=full`로 변경하지 않습니다. 실행 중단은 Shift+F5입니다.
+
+폴더 로딩 분석은 `src/Viewer.cs`의 `BeginScan()`, `src/Formats.cs`의 `Scanner.Scan()`에 중단점을 설정한 뒤 앱에서 폴더를 선택하면 됩니다. 디버그 실행 폴더는 `bin/Debug/net45`이며 설정·숨김·미번역 기록도 이곳에 별도로 저장합니다. 배포 폴더의 기록은 자동으로 가져오지 않습니다. 앱 실행 시 기능 조작과 실제 중단점 적중은 사용자 확인 범위입니다.
+
 ## 현재 캐시 동작
+
 
 디스크 캐시 구현과 최근 이미지 복원 UI를 제거했습니다. PreviewLoader는 메모리만 재사용하며 원본 읽기 외 캐시 파일 I/O를 수행하지 않습니다. 파일 경로·오프셋 기반 영구 리소스 ID는 동일한 UTF-8 SHA-256 알고리즘을 Bin.TextHash로 옮겨 숨김·미번역 키 호환성을 유지합니다. 시작 시 이전 폴더 경로만 복원하고 사용자가 다시 검색합니다.
 
@@ -26,6 +39,8 @@ GUI의 숨김 저장소는 resourceMode로 작동하고 리소스 ID 하나로 �
 리소스 ID 전환 당시 사용자 요청으로 기존 숨김·미번역·캐시 초기화를 완료했습니다. 이후 업데이트에서는 기존 사용자 데이터를 유지하며 다시 초기화하지 않습니다. 원본 게임 파일을 변경하지 않습니다.
 
 ## 모듈
+
+변수명은 데이터의 역할을 표현합니다. 검색은 `rootDirectory`, `filePath`, `scanResult`, `source`, `header`, 취소/진행 전달은 `cancellationToken`, `reportProgress`를 사용합니다. 디코더에서는 바이트 오프셋·픽셀 좌표·블록 인덱스·색상 채널을 구분합니다. 모델의 공개 필드와 JSON 키, 리플렉션으로 조회하는 이름은 호환성 계약으로 취급하므로 단순 이름 정리에서 변경하지 않습니다.
 
 - `src/Core.cs`: 범위가 제한된 읽기, 메타데이터 모델, LZP2, 픽셀 디코더. 게임 경로를 참조하지 않음.
 - `src/Formats.cs`: `ITextureReader` / `IContainerReader` 및 등록 배열. DDS, GTF, G1T, BNS를 별도 클래스로 구현. 폴더 탐색은 각 클래스의 시그니처 검사를 거침.
