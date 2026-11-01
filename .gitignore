@@ -1,0 +1,13 @@
+dist/
+artifacts/
+*.user
+vendor/
+.vs/
+.idea/
+.env
+.env.*
+*.dmp
+*.pfx
+*.key
+docs/VALIDATION.md
+docs/FREEZE_INVESTIGATION.md
